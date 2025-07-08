@@ -1,37 +1,34 @@
-# scrapers/flipkart.py
 import requests
 from bs4 import BeautifulSoup
 
-def fetch_flipkart(query, country):
-    if country.lower() != "in":
-        return []
-
+def fetch_flipkart(query, country=None):
+    url = f"https://www.flipkart.com/search?q={query}"
     headers = {
         "User-Agent": "Mozilla/5.0"
     }
-    search_url = f"https://www.flipkart.com/search?q={query.replace(' ', '+')}"
-    response = requests.get(search_url, headers=headers)
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
+        print("Failed to fetch Flipkart page.")
+        return []
+
     soup = BeautifulSoup(response.text, "html.parser")
+    products = soup.select("._1AtVbE")
 
     results = []
-    items = soup.select("._1AtVbE")  # Each product block
+    for product in products:
+        name = product.select_one("._4rR01T")
+        price = product.select_one("._30jeq3")
+        link = product.select_one("a")
 
-    for item in items:
-        title = item.select_one("._4rR01T") or item.select_one(".s1Q9rs")
-        price = item.select_one("._30jeq3")
-        link = item.select_one("a._1fQZEK") or item.select_one("a.s1Q9rs")
+        if name and price and link:
+            results.append({
+                "productName": name.text.strip(),
+                "price": price.text.strip().replace("₹", "").replace(",", ""),
+                "currency": "INR",
+                "link": "https://www.flipkart.com" + link['href']
+            })
 
-        if title and price and link:
-            price_text = price.text.replace("₹", "").replace(",", "").strip()
-            try:
-                price_value = float(price_text)
-                results.append({
-                    "productName": title.text.strip(),
-                    "price": price_value,
-                    "currency": "INR",
-                    "link": "https://www.flipkart.com" + link["href"]
-                })
-            except:
-                continue
-
+    print("Flipkart results:", results)
     return results
