@@ -1,2 +1,1 @@
-# price-compare-tool
-An AI-powered FastAPI tool that fetches and compares real-time product prices across e-commerce sites based on country. Supports intelligent matching, price ranking, and currency conversion.
+ curl -X GET "http://localhost:8000/compare?country=IN&query=boAt%20Airdopes%20311%20Pro"
